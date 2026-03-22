@@ -43,7 +43,7 @@ class PoseFeatureExtractor:
         
         if x2 <= x1 or y2 <= y1:
             return None
-        return frame[y1:y2, x1:x2]
+        return np.ascontiguousarray(frame[y1:y2, x1:x2])
 
     def extract_from_roi(self, roi_bgr):
         if roi_bgr is None or roi_bgr.size == 0:

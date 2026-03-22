@@ -1,5 +1,5 @@
 SEED: 42
-DATASET_DIR: "/kaggle/input/falldataset-imvia"
+DATASET_DIR: "/kaggle/input/datasets/tuyenldvn/falldataset-imvia"
 OUTPUT_DIR: "./outputs_fall"
 
 MODEL:

@@ -22,13 +22,16 @@ from fall_detection.data.feature_extractor import (
     build_sequences_from_valid_frames
 )
 
+import imageio
+
 def get_total_frames(video_path):
-    cap = cv2.VideoCapture(str(video_path))
-    if not cap.isOpened():
+    try:
+        reader = imageio.get_reader(str(video_path), 'ffmpeg')
+        total = reader.count_frames()
+        reader.close()
+        return total
+    except Exception:
         return 0
-    total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    cap.release()
-    return total
 
 def validate_row(row):
     fs, fe, ls, total = row["fall_start"], row["fall_end"], row["lying_start"], row["total_frames"]
@@ -52,50 +55,66 @@ def process_video(video_info, extractor, cfg, verbose=False):
     if not os.path.exists(video_path):
         return None, None
 
-    cap = cv2.VideoCapture(video_path)
-    if not cap.isOpened(): return None, None
-
-    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    total_frames = video_info.get("total_frames", 0)
+    if total_frames <= 0: return None, None
+    
     valid_features, valid_labels = [], []
     pbar = tqdm(total=total_frames, desc=Path(video_path).name, disable=not verbose)
     
     frame_idx = 0
-    while frame_idx < total_frames - 2:
-        ret, frame = cap.read()
-        if not ret: break
-
-        frame_label = frame_label_from_intervals(
-            frame_idx=frame_idx,
-            fall_start=fall_start,
-            fall_end=fall_end,
-            lying_start=lying_start
-        )
-
-        try:
-            yolo_results = extractor.yolo_model.predict(
-                source=frame, verbose=False, conf=cfg.MODEL.MIN_BBOX_CONF, device="cpu"
+    reader = None
+    try:
+        reader = imageio.get_reader(str(video_path), 'ffmpeg')
+        for frame_rgb in reader:
+            frame = cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2BGR)
+            
+            frame_label = frame_label_from_intervals(
+                frame_idx=frame_idx,
+                fall_start=fall_start,
+                fall_end=fall_end,
+                lying_start=lying_start
             )
-        except Exception:
+
+            try:
+                yolo_results = extractor.yolo_model.predict(
+                    source=frame, verbose=False, conf=cfg.MODEL.MIN_BBOX_CONF, device="cpu"
+                )
+            except Exception:
+                frame_idx += 1
+                pbar.update(1)
+                continue
+
+            if len(yolo_results) > 0:
+                best_box = extractor.choose_best_person_box(yolo_results[0])
+                if best_box is not None:
+                    roi = extractor.safe_crop(frame, best_box)
+                    feat = extractor.extract_from_roi(roi)
+                    if feat is not None:
+                        valid_features.append(feat)
+                        valid_labels.append(frame_label)
+
             frame_idx += 1
             pbar.update(1)
-            continue
-
-        if len(yolo_results) > 0:
-            best_box = extractor.choose_best_person_box(yolo_results[0])
-            if best_box is not None:
-                roi = extractor.safe_crop(frame, best_box)
-                feat = extractor.extract_from_roi(roi)
-                if feat is not None:
-                    valid_features.append(feat)
-                    valid_labels.append(frame_label)
-
-        frame_idx += 1
-        pbar.update(1)
-
-    cap.release()
-    pbar.close()
+            
+            # Stop just before EOF to avoid broken audio padding flushes
+            if frame_idx >= total_frames - 2:
+                break
+                
+    except Exception as e:
+        # Safely ignore broken video tails
+        pass
+    finally:
+        if reader is not None:
+            try:
+                reader.close()
+            except Exception:
+                pass
+        pbar.close()
 
     return build_sequences_from_valid_frames(
+        valid_features, valid_labels, 
+        seq_len=cfg.MODEL.SEQ_LEN, stride=cfg.MODEL.WINDOW_STRIDE
+    )
         valid_features, valid_labels, 
         seq_len=cfg.MODEL.SEQ_LEN, stride=cfg.MODEL.WINDOW_STRIDE
     )

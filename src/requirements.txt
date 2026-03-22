@@ -1,6 +1,7 @@
 ultralytics
 mediapipe==0.10.14
 opencv-python
+imageio[ffmpeg]
 torch>=2.0.0
 scikit-learn
 numpy

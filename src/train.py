@@ -6,7 +6,9 @@ import numpy as np
 from pathlib import Path
 from collections import Counter
 from sklearn.model_selection import train_test_split
+from sklearn.utils.class_weight import compute_class_weight
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 from fall_detection.utils.config import get_config
 from fall_detection.models.transformer import FallTransformer
@@ -56,7 +58,12 @@ def train_model():
         dropout=cfg.MODEL.DROPOUT
     ).to(device)
 
-    criterion = nn.CrossEntropyLoss()
+    # Compute class weights to handle imbalanced dataset
+    class_weights = compute_class_weight('balanced', classes=np.unique(y_train), y=y_train)
+    class_weights_t = torch.tensor(class_weights, dtype=torch.float32).to(device)
+    print(f"Applying class weights: {class_weights}")
+
+    criterion = nn.CrossEntropyLoss(weight=class_weights_t)
     optimizer = optim.Adam(model.parameters(), lr=cfg.TRAIN.LEARNING_RATE)
 
     epochs = cfg.TRAIN.EPOCHS
@@ -71,7 +78,8 @@ def train_model():
         train_loss = 0.0
         train_correct = 0
         
-        for batch_X, batch_y in train_loader:
+        train_pbar = tqdm(train_loader, desc=f"Epoch {epoch+1:02d}/{epochs} [Train]")
+        for batch_X, batch_y in train_pbar:
             batch_X, batch_y = batch_X.to(device), batch_y.to(device)
             
             optimizer.zero_grad()
@@ -83,6 +91,7 @@ def train_model():
             train_loss += loss.item() * batch_X.size(0)
             preds = torch.argmax(outputs, dim=1)
             train_correct += (preds == batch_y).sum().item()
+            train_pbar.set_postfix({"loss": f"{loss.item():.4f}"})
             
         train_loss /= len(train_loader.dataset)
         train_acc = train_correct / len(train_loader.dataset)
@@ -91,17 +100,22 @@ def train_model():
         model.eval()
         val_loss = 0.0
         val_correct = 0
+        
+        val_pbar = tqdm(val_loader, desc=f"Epoch {epoch+1:02d}/{epochs} [Val]")
         with torch.no_grad():
-            for batch_X, batch_y in val_loader:
+            for batch_X, batch_y in val_pbar:
                 batch_X, batch_y = batch_X.to(device), batch_y.to(device)
                 outputs = model(batch_X)
                 loss = criterion(outputs, batch_y)
                 val_loss += loss.item() * batch_X.size(0)
                 preds = torch.argmax(outputs, dim=1)
                 val_correct += (preds == batch_y).sum().item()
+                val_pbar.set_postfix({"loss": f"{loss.item():.4f}"})
                 
         val_loss /= len(val_loader.dataset)
         val_acc = val_correct / len(val_loader.dataset)
+
+        
 
         print(f"Epoch {epoch+1:02d}/{epochs} - "
               f"loss: {train_loss:.4f} - acc: {train_acc:.4f} - "

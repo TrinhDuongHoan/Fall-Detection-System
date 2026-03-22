@@ -96,12 +96,10 @@ def process_video(video_info, extractor, cfg, verbose=False):
             frame_idx += 1
             pbar.update(1)
             
-            # Stop just before EOF to avoid broken audio padding flushes
-            if frame_idx >= total_frames - 2:
-                break
+            # if frame_idx >= total_frames - 2:
+            #     break
                 
     except Exception as e:
-        # Safely ignore broken video tails
         pass
     finally:
         if reader is not None:

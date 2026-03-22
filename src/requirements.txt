@@ -1,9 +1,10 @@
+ultralytics
+mediapipe==0.10.14
+opencv-python
 torch>=2.0.0
+scikit-learn
 numpy
 pandas
-opencv-python-headless
-mediapipe==0.10.14
-ultralytics
-scikit-learn
 tqdm
+matplotlib
 PyYAML

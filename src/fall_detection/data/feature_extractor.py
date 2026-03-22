@@ -8,9 +8,8 @@ class PoseFeatureExtractor:
         self.cfg = cfg
         self.yolo_model = YOLO(cfg.MODEL.YOLO_MODEL_NAME)
         self.mp_pose = mp.solutions.pose.Pose(
-            static_image_mode=False,
+            static_image_mode=True,
             model_complexity=1,
-            smooth_landmarks=True,
             enable_segmentation=False,
             min_detection_confidence=0.5,
             min_tracking_confidence=0.5

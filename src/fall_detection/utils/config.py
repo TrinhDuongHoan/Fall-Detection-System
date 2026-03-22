@@ -5,9 +5,9 @@ class Config:
     def __init__(self, config_dict):
         for k, v in config_dict.items():
             if isinstance(v, dict):
-                setattr(self, k, Config(v))
+                setattr(self, str(k), Config(v))
             else:
-                setattr(self, k, v)
+                setattr(self, str(k), v)
 
     @classmethod
     def from_yaml(cls, path):

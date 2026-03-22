@@ -115,9 +115,6 @@ def process_video(video_info, extractor, cfg, verbose=False):
         valid_features, valid_labels, 
         seq_len=cfg.MODEL.SEQ_LEN, stride=cfg.MODEL.WINDOW_STRIDE
     )
-        valid_features, valid_labels, 
-        seq_len=cfg.MODEL.SEQ_LEN, stride=cfg.MODEL.WINDOW_STRIDE
-    )
 
 if __name__ == "__main__":
     cfg = get_config("configs/default.yaml")

@@ -1,6 +1,6 @@
 SEED: 42
 DATASET_DIR: "/kaggle/input/datasets/tuyenldvn/falldataset-imvia"
-OUTPUT_DIR: "./outputs_fall"
+OUTPUT_DIR: "/kaggle/working/Fall-Detection-System/src/outputs_fall"
 
 MODEL:
   YOLO_MODEL_NAME: "yolov8m.pt"

@@ -1,0 +1,9 @@
+torch>=2.0.0
+numpy
+pandas
+opencv-python-headless
+mediapipe==0.10.14
+ultralytics
+scikit-learn
+tqdm
+PyYAML

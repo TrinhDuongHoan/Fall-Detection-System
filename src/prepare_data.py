@@ -60,7 +60,7 @@ def process_video(video_info, extractor, cfg, verbose=False):
     pbar = tqdm(total=total_frames, desc=Path(video_path).name, disable=not verbose)
     
     frame_idx = 0
-    while True:
+    while frame_idx < total_frames - 2:
         ret, frame = cap.read()
         if not ret: break
 

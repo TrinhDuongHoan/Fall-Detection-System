@@ -60,8 +60,10 @@ def train_model():
 
     # Compute class weights to handle imbalanced dataset
     class_weights = compute_class_weight('balanced', classes=np.unique(y_train), y=y_train)
+    # Chặn không để thuật toán phạt quá đà gây ra tâm lý đoán nhầm giả
+    class_weights = np.clip(class_weights, 0.5, 3.5)
     class_weights_t = torch.tensor(class_weights, dtype=torch.float32).to(device)
-    print(f"Applying class weights: {class_weights}")
+    print(f"Applying bounded class weights: {class_weights}")
 
     criterion = nn.CrossEntropyLoss(weight=class_weights_t)
     optimizer = optim.Adam(model.parameters(), lr=cfg.TRAIN.LEARNING_RATE)

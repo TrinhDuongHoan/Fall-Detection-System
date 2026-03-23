@@ -17,7 +17,6 @@ class FallHybrid(nn.Module):
         self.seq_len = seq_len
         self.d_model = d_model
         
-        # 1. Temporal Convolution (Captures Joint Velocity between consecutive frames)
         self.temporal_proj = nn.Sequential(
             nn.Conv1d(feature_dim, d_model, kernel_size=3, padding=1),
             nn.BatchNorm1d(d_model),
@@ -26,15 +25,12 @@ class FallHybrid(nn.Module):
             nn.BatchNorm1d(d_model),
             nn.GELU()
         )
-        
-        # 2. Learnable CLS Token (Giống hệ tư tưởng của Vision Transformers)
+
         self.cls_token = nn.Parameter(torch.randn(1, 1, d_model))
         
-        # 3. Positional Embedding (seq_len + 1 để chứa thêm token CLS)
         self.pos_embedding = nn.Parameter(torch.randn(1, seq_len + 1, d_model))
         self.dropout = nn.Dropout(dropout)
         
-        # 4. Transformer Blocks
         encoder_layer = nn.TransformerEncoderLayer(
             d_model=d_model, 
             nhead=num_heads, 
@@ -45,7 +41,6 @@ class FallHybrid(nn.Module):
         )
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
         
-        # 5. Classifier Head
         self.classifier = nn.Sequential(
             nn.LayerNorm(d_model),
             nn.Dropout(dropout),
@@ -61,28 +56,19 @@ class FallHybrid(nn.Module):
         """
         batch_size = x.size(0)
         
-        # 1. 1D Convolution mapping
-        # Conv1d expects (batch, channels, seq_len)
         x = x.transpose(1, 2)
         x = self.temporal_proj(x)
-        # Back to (batch, seq_len, d_model)
         x = x.transpose(1, 2)
         
-        # 2. Append CLS Token at the beginning of the sequence
         cls_tokens = self.cls_token.expand(batch_size, -1, -1)
         x = torch.cat((cls_tokens, x), dim=1)
         
-        # 3. Add Positional Embedding
         x = x + self.pos_embedding
         x = self.dropout(x)
         
-        # 4. Forward through Transformer
         x = self.transformer_encoder(x)
         
-        # 5. Extract CLS token output (index 0) instead of Global Average Pooling
-        # Token này đã gom cụm trạng thái chớp nhoáng
         cls_output = x[:, 0, :]
         
-        # 6. Classify
         logits = self.classifier(cls_output)
         return logits

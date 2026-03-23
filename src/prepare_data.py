@@ -97,11 +97,7 @@ def process_video(video_info, extractor, cfg, verbose=False):
                         valid_labels.append(frame_label)
 
             frame_idx += 1
-            pbar.update(1)
-            
-            # if frame_idx >= total_frames - 2:
-            #     break
-                
+            pbar.update(1) 
     except Exception as e:
         pass
     finally:

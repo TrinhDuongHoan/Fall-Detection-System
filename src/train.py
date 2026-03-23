@@ -31,7 +31,6 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs, p
         train_loss /= len(train_loader.dataset)
         train_acc = train_correct / len(train_loader.dataset)
         
-        # Validation
         model.eval()
         val_loss = 0.0
         val_correct = 0

@@ -6,7 +6,6 @@ from ultralytics import YOLO
 class PoseFeatureExtractor:
     def __init__(self, cfg):
         self.cfg = cfg
-        # Khởi tạo MediaPipe TRƯỚC để tránh xung đột RAM với PyTorch YOLO
         self.mp_pose = mp.solutions.pose.Pose(
             static_image_mode=True,
             model_complexity=1,
@@ -14,11 +13,8 @@ class PoseFeatureExtractor:
             min_detection_confidence=0.5,
             min_tracking_confidence=0.5
         )
-        # Chạy mồi 1 frame giả để C++ XNNPACK kích hoạt xong hoàn toàn
         dummy = np.zeros((64, 64, 3), dtype=np.uint8)
         self.mp_pose.process(dummy)
-        
-        # SAU ĐÓ mới tải mô hình YOLO (PyTorch) lên GPU
         self.yolo_model = YOLO(cfg.MODEL.YOLO_MODEL_NAME)
         
     def choose_best_person_box(self, result):

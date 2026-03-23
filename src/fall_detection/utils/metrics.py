@@ -1,21 +1,18 @@
-from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, precision_score, recall_score, f1_score    
 import numpy as np
 
 def print_evaluation_report(y_true, y_pred, class_names_dict):
-    """
-    Prints a formatted evaluation report including accuracy, confusion matrix, 
-    and detailed classification report per class.
-    
-    Args:
-        y_true (list or np.array): True labels
-        y_pred (list or np.array): Predicted labels
-        class_names_dict (dict): Dictionary mapping class indices to names (e.g., {0: 'Normal', 1: 'Falling', 2: 'Lying'})
-    """
     acc = accuracy_score(y_true, y_pred)
+    precision = precision_score(y_true, y_pred, average='macro')
+    recall = recall_score(y_true, y_pred, average='macro')
+    f1 = f1_score(y_true, y_pred, average='macro')
     names = [class_names_dict.get(i, str(i)) for i in range(len(class_names_dict))]
     
     print("=" * 50)
     print(f"Overall Accuracy: {acc * 100:.2f}%")
+    print(f"Overall Precision: {precision * 100:.2f}%")
+    print(f"Overall Recall: {recall * 100:.2f}%")
+    print(f"Overall F1 Score: {f1 * 100:.2f}%")
     print("=" * 50)
     
     print("\nClassification Report:")

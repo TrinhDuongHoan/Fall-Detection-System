@@ -34,7 +34,6 @@ def main():
 
     extractor = PoseFeatureExtractor(cfg)
 
-    # Class maps for display
     class_map = {0: "Normal", 1: "Falling", 2: "Lying"}
     color_map = {0: (0, 255, 0), 1: (0, 0, 255), 2: (0, 165, 255)}
 
@@ -68,18 +67,14 @@ def main():
             if best_box is not None:
                 roi = extractor.safe_crop(frame, best_box)
                 feat = extractor.extract_from_roi(roi)
-                
-                # Draw bounding box
                 x1, y1, x2, y2 = best_box
                 cv2.rectangle(frame, (x1, y1), (x2, y2), color_map[current_label_id], 2)
 
         if feat is not None:
             sequence_buffer.append(feat)
         else:
-            # If tracking lost for a frame, repeat the last known feature, or pad zero. We pad zero here.
             sequence_buffer.append(np.zeros((cfg.MODEL.FEATURE_DIM,), dtype=np.float32))
 
-        # Perform prediction when buffer is full
         if len(sequence_buffer) == cfg.MODEL.SEQ_LEN:
             seq_np = np.stack(sequence_buffer, axis=0)
             seq_t = torch.tensor(seq_np, dtype=torch.float32).unsqueeze(0).to(device) # (1, seq_len, dim)
@@ -89,7 +84,6 @@ def main():
                 current_label_id = torch.argmax(probs).item()
                 current_prob = probs[current_label_id].item()
 
-        # Display label
         label_text = f"Status: {class_map.get(current_label_id, 'Unknown')} ({current_prob*100:.1f}%)"
         cv2.putText(frame, label_text, (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.2, color_map.get(current_label_id, (255,255,255)), 3)
 

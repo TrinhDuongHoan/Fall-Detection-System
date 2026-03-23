@@ -3,7 +3,8 @@ DATASET_DIR: "/kaggle/input/datasets/tuyenldvn/falldataset-imvia"
 OUTPUT_DIR: "/kaggle/working/Fall-Detection-System/src/outputs_fall"
 
 MODEL:
-  YOLO_MODEL_NAME: "yolov8m.pt"
+  # YOLO_MODEL_NAME: "yolov8m.pt"
+  YOLO_MODEL_NAME: "yolo11m.pt"
   PERSON_CLASS_ID: 0
   SEQ_LEN: 30
   NUM_KEYPOINTS: 33

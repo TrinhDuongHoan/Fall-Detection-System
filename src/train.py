@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from fall_detection.utils.config import get_config
-from fall_detection.models.transformer import FallTransformer
+from fall_detection.models.lstm import FallLSTM
 from fall_detection.data.dataset import FallSequenceDataset
 
 def train_model():
@@ -47,15 +47,10 @@ def train_model():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
-    model = FallTransformer(
+    model = FallLSTM(
         seq_len=cfg.MODEL.SEQ_LEN,
         feature_dim=cfg.MODEL.FEATURE_DIM,
-        num_classes=cfg.MODEL.NUM_CLASSES,
-        d_model=cfg.MODEL.D_MODEL,
-        num_heads=cfg.MODEL.NUM_HEADS,
-        ff_dim=cfg.MODEL.FF_DIM,
-        num_layers=cfg.MODEL.NUM_LAYERS,
-        dropout=cfg.MODEL.DROPOUT
+        num_classes=cfg.MODEL.NUM_CLASSES
     ).to(device)
 
     # Compute class weights to handle imbalanced dataset
@@ -73,7 +68,7 @@ def train_model():
     patience = 8
     patience_counter = 0
 
-    best_model_path = output_dir / "best_fall_transformer.pth"
+    best_model_path = output_dir / "best_fall_lstm.pth"
 
     for epoch in range(epochs):
         model.train()

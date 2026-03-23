@@ -4,7 +4,7 @@ from pathlib import Path
 from torch.utils.data import DataLoader
 
 from fall_detection.utils.config import get_config
-from fall_detection.models.transformer import FallTransformer
+from fall_detection.models.lstm import FallLSTM
 from fall_detection.data.dataset import FallSequenceDataset
 from fall_detection.utils.metrics import print_evaluation_report
 
@@ -14,7 +14,7 @@ def evaluate_model():
     
     X_test_path = output_dir / "X_test.npy"
     y_test_path = output_dir / "y_test.npy"
-    model_path = output_dir / "best_fall_transformer.pth"
+    model_path = output_dir / "best_fall_lstm.pth"
 
     if not (X_test_path.exists() and y_test_path.exists()):
         print("Test split not found. Please run train.py first to generate the test split.")
@@ -33,15 +33,10 @@ def evaluate_model():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
-    model = FallTransformer(
+    model = FallLSTM(
         seq_len=cfg.MODEL.SEQ_LEN,
         feature_dim=cfg.MODEL.FEATURE_DIM,
-        num_classes=cfg.MODEL.NUM_CLASSES,
-        d_model=cfg.MODEL.D_MODEL,
-        num_heads=cfg.MODEL.NUM_HEADS,
-        ff_dim=cfg.MODEL.FF_DIM,
-        num_layers=cfg.MODEL.NUM_LAYERS,
-        dropout=cfg.MODEL.DROPOUT
+        num_classes=cfg.MODEL.NUM_CLASSES
     ).to(device)
 
     model.load_state_dict(torch.load(model_path, map_location=device, weights_only=True))

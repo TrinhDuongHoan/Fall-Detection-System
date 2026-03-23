@@ -6,7 +6,7 @@ from collections import deque
 from pathlib import Path
 
 from fall_detection.utils.config import get_config
-from fall_detection.models.transformer import FallTransformer
+from fall_detection.models.lstm import FallLSTM
 from fall_detection.data.feature_extractor import PoseFeatureExtractor
 
 def main():
@@ -20,19 +20,14 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
-    model_path = Path(cfg.OUTPUT_DIR) / "best_fall_transformer.pth"
+    model_path = Path(cfg.OUTPUT_DIR) / "best_fall_lstm.pth"
     if not model_path.exists():
         raise FileNotFoundError(f"Model checkpoint not found at {model_path}. Train the model first.")
 
-    model = FallTransformer(
+    model = FallLSTM(
         seq_len=cfg.MODEL.SEQ_LEN,
         feature_dim=cfg.MODEL.FEATURE_DIM,
-        num_classes=cfg.MODEL.NUM_CLASSES,
-        d_model=cfg.MODEL.D_MODEL,
-        num_heads=cfg.MODEL.NUM_HEADS,
-        ff_dim=cfg.MODEL.FF_DIM,
-        num_layers=cfg.MODEL.NUM_LAYERS,
-        dropout=cfg.MODEL.DROPOUT
+        num_classes=cfg.MODEL.NUM_CLASSES
     ).to(device)
     model.load_state_dict(torch.load(model_path, map_location=device, weights_only=True))
     model.eval()

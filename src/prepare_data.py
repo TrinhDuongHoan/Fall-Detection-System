@@ -77,7 +77,7 @@ def process_video(video_info, extractor, cfg, verbose=False):
 
             try:
                 yolo_results = extractor.yolo_model.predict(
-                    source=frame, verbose=False, conf=cfg.MODEL.MIN_BBOX_CONF
+                    source=frame, verbose=False, conf=cfg.MODEL.MIN_BBOX_CONF, device=0
                 )
             except Exception:
                 frame_idx += 1

@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from pathlib import Path
+import torch
 
 from fall_detection.utils.config import get_config
 from fall_detection.data.lei2_parser import build_le2i_annotations
@@ -76,10 +77,12 @@ def process_video(video_info, extractor, cfg, verbose=False):
             )
 
             try:
+                device_mode = 0 if torch.cuda.is_available() else "cpu"
                 yolo_results = extractor.yolo_model.predict(
-                    source=frame, verbose=False, conf=cfg.MODEL.MIN_BBOX_CONF, device=0
+                    source=frame, verbose=False, conf=cfg.MODEL.MIN_BBOX_CONF, device=device_mode
                 )
-            except Exception:
+            except Exception as e:
+                print(f"YOLO Error: {e}")
                 frame_idx += 1
                 pbar.update(1)
                 continue

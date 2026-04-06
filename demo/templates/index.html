@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fall Detection Guardian</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><span class="highlight">Fall Detection</span> Guardian</h1>
+            <p>Real-time AI Video Surveillance Interface</p>
+        </header>
+
+        <div class="upload-section" id="uploadSection">
+            <div class="drop-zone" id="dropZone">
+                <div class="icon">📹</div>
+                <h3>Drag & Drop your surveillance video here</h3>
+                <p>or click to browse (.mp4, .avi)</p>
+                <input type="file" id="fileInput" accept="video/*" hidden>
+            </div>
+            <div class="loading" id="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Uplinking to Neural Engine...</p>
+            </div>
+        </div>
+
+        <div class="video-section" id="videoSection" style="display: none;">
+            <div class="video-container">
+                <img id="videoStream" src="" alt="Live Video Feed">
+                <div class="status-overlay">
+                    <div class="pulse"></div>
+                    <span>AI CAMERA ACTIVE</span>
+                </div>
+            </div>
+            <button id="resetBtn" class="btn">Connect Another Monitor</button>
+        </div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const uploadSection = document.getElementById('uploadSection');
+        const loading = document.getElementById('loading');
+        const videoSection = document.getElementById('videoSection');
+        const videoStream = document.getElementById('videoStream');
+        const resetBtn = document.getElementById('resetBtn');
+
+        // Drag and drop events
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                handleUpload(e.dataTransfer.files[0]);
+            }
+        });
+
+        dropZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                handleUpload(e.target.files[0]);
+            }
+        });
+
+        resetBtn.addEventListener('click', () => {
+            videoStream.src = "";
+            videoSection.style.display = 'none';
+            dropZone.style.display = 'flex';
+            uploadSection.style.display = 'block';
+            fileInput.value = '';
+        });
+
+        async function handleUpload(file) {
+            dropZone.style.display = 'none';
+            loading.style.display = 'flex';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    loading.style.display = 'none';
+                    uploadSection.style.display = 'none';
+                    videoSection.style.display = 'block';
+                    
+                    // Activate Stream
+                    videoStream.src = `/video_feed/${data.filename}`;
+                } else {
+                    alert('Upload failed: ' + data.detail);
+                    resetBtn.click();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Connection error!');
+                resetBtn.click();
+            }
+        }
+    </script>
+</body>
+</html>
